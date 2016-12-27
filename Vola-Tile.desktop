@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Vola-Tile
+Exec=/usr/bin/qmlscene $@  /opt/click.ubuntu.com/com.ubuntu.ve.bflanagin.vola-tile/current/Vola-Tile.qml
+Icon= /opt/click.ubuntu.com/com.ubuntu.ve.bflanagin.vola-tile/current/vola-tile.png
+Terminal=false
+Type=Application
+X-Ubuntu-Touch=true
+X-Ubuntu-Supported-Orientations=landscape
+Name[en_US]=Vola-Tile

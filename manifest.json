@@ -1,0 +1,16 @@
+{
+    "architecture": "all",
+    "description": "Verses Tile game from one to 4 players",
+    "framework": "ubuntu-sdk-15.04",
+    "hooks": {
+        "Vola-Tile": {
+            "apparmor": "Vola-Tile.apparmor",
+            "desktop": "Vola-Tile.desktop"
+        }
+    },
+    "installed-size": "18364",
+    "maintainer": "Benjamin Flanagin <bflanagin@vagueentertainment.com>",
+    "name": "vola-tile.vagueentertainment",
+    "title": "Vola-Tile",
+    "version": "0.4"
+}
