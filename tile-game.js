@@ -1,3 +1,5 @@
+
+
 //var blockSize = 60;
 var maxColumn = 22;
 var maxRow = 20;
@@ -6,9 +8,12 @@ var yoffset = 0;
 
 var maxIndex = maxColumn * maxRow;
 var tiles = new Array(maxIndex);
+var ctiles = new Array(maxIndex);
+
 
 var component;
 var tilenum = 0;
+var ctilenum = 0;
 var combo = 0;
 var playernotification;
 var pnote;
@@ -17,7 +22,7 @@ var notify_me;
 
 var player_dialog;
 var playerdialog;
-//var countdown = 0;
+var countdown = 3;
 
 //vol_array 1= timer 2= state 3= cooldown
 var vol_array = new Array(100);
@@ -30,35 +35,56 @@ for (var i=0;i<100;i++) {
 
 //var gameid = 0;
 var pid = new Array(4);
+for(var num =0;num < 4;num++) pid[num] = "";
+
 var userid = "";
 var gactive = 0;
 var gindex = 0;
 var yourturn = 0;
+var sameUser = 0;
+var gamerequested = 0;
 
 // end network vars
 
 //player cycling
 
 var pname = new Array(4);
+for(var num =0;num < 4;num++) pname[num] = "";
 
 var pscore = new Array(4);
+for(var num =0;num < 4;num++) pscore[num] = 0;
 
 var pbacking = new Array(4);
+for(var num =0;num < 4;num++) pbacking[num] = 1;
 
 var pemblem = new Array(4);
+for(var num =0;num < 4;num++) pemblem[num] = 1;
 
 var pcombo = new Array(4);
+for(var num =0;num < 4;num++) pcombo[num] = 0;
 
 var pwins = new Array(4);
+for(var num =0;num < 4;num++) pwins[num] = 0;
+
 var plosses = new Array(4);
+for(var num =0;num < 4;num++) plosses[num] = 0;
+
 var pdraws = new Array(4);
+for(var num =0;num < 4;num++) pdraws[num] = 0;
 
 var player = 0;
 var score = 0;
 var gameover = 0;
 var waitingfor =4;
-var playerids;
+var playerids  =["na","na","na","na"];
 var gamestarted = 0;
+
+var lname = "";
+var lwins = 0;
+var llosses = 0;
+var ldraws = 0;
+var lemblem = 0;
+var lbacking = 0;
 
 
 var paint = 99;
@@ -114,7 +140,7 @@ function notification() {
 
         } else { console.log("failed to load notification area");}
     } else {
-        notify_me.state = "active"
+        //notify_me.state = "active"
     }
 }
 
@@ -133,8 +159,8 @@ function cafesync(cod) {
                     console.log(player_dialog.errorString());
                     return false;
                 }
-             playerdialog.width = titlescreen.width ;
-             playerdialog.height = titlescreen.height;
+             //playerdialog.width = titlescreen.width ;
+            // playerdialog.height = titlescreen.height;
             }
             else {
 
@@ -156,16 +182,20 @@ function startNewGame() {
 
 //end setup //
     player_notification_area();
-    notification();
+    //
     if(nwtoggle != 0) {
-    in_game.start();
-    } else {
 
-    }
     network_wait.stop();
+        in_game.start();
+
+        } else {
+        network_wait.stop();
+        notification();
+    }
 
     pos0backing = pbacking[0];
     pos0emblem = pemblem[0];
+    pos0name = pname[0];
 
     //Calculate board size
         maxColumn = 10;
@@ -182,7 +212,7 @@ function startNewGame() {
                 tilenum= tilenum +1;
            }
        }
-
+    notify_me.state = "inactive";
     timer.start();
     gamestarted = 1;
    }
@@ -237,15 +267,16 @@ function createBlock(column, row, num) {
 
 function handleClick(xPos,yPos) {
     if(gamestarted == 1) {
-    if(userid == pid[yourturn]) {
+    if(nwtoggle == 0 | userid == pid[yourturn]) {
     var row = yPos;
     var column = xPos;
     combo = 0;
     sound.stop();
     sound.volume = 0.2;
     changeTiles(column,row);
+        //console.log("clicked at",xPos,":",yPos);
 } else {
-        console.log("Not your turn!! it's ",pname[yourturn],"turn");
+        //console.log("Not your turn!! it's ",pname[yourturn],"turn");
     }
 }
 }
@@ -253,53 +284,70 @@ function handleClick(xPos,yPos) {
 
 function changeTiles(xPos,yPos) {
     var checking = 0;
-
-
+    //console.log(gamemode);
     while(checking < maxIndex) {
 
-        if (tiles[checking].x <= xPos && xPos <=(tiles[checking].width + tiles[checking].x))  {
-            if(tiles[checking].y <= yPos && yPos <=(tiles[checking].height + tiles[checking].y)) {
+        if(gamemode == 5) {
 
-            //console.log("changing tile at",tiles[checking].x,tiles[checking].y,"which has an index of",tiles[checking].num)
+        if (ctiles[checking].x <= xPos && xPos <=(ctiles[checking].width + ctiles[checking].x))  {
+            if(ctiles[checking].y <= yPos && yPos <=(ctiles[checking].height + ctiles[checking].y)) {
+
+            //console.log("changing canvas tile at",ctiles[checking].x,ctiles[checking].y,"which has an index of",ctiles[checking].num)
                 break;
             }
           }
+      }  else {
+        if (tiles[checking].x <= xPos && xPos <=(tiles[checking].width + tiles[checking].x))  {
+            if(tiles[checking].y <= yPos && yPos <=(tiles[checking].height + tiles[checking].y)) {
+
+            //console.log("changing game tile at",tiles[checking].x,tiles[checking].y,"which has an index of",tiles[checking].num)
+                break;
+            }
+          }
+
+        }
         checking = checking + 1;
+
         }
 
-
-
-    if(gamemode !=5) {
-
-        player_move(checking);
+    if(gamemode != 5) {
 
         if(tiles[checking].type == 98) {
 
             if(tiles[checking].type != 99) {
                 is_volatile(101);
+                if (nwtoggle == 1) {
+
+                    player_move(checking);
+
+                } else {
             switch(player) {
             case 0:  tiles[checking].type = pbacking[0];tiles[checking].player = 0;tiles[checking].etype = pemblem[0];break;
             case 1:  tiles[checking].type = pbacking[1];tiles[checking].player = 1;tiles[checking].etype = pemblem[1];break;
             case 2:  tiles[checking].type = pbacking[2];tiles[checking].player = 2;tiles[checking].etype = pemblem[2];break;
             case 3:  tiles[checking].type = pbacking[3];tiles[checking].player = 3;tiles[checking].etype = pemblem[3];break;
-            }
 
-            sound.play();
-            sound.volume = 0.1;
+            }
             linecheck(checking);
             player = player +1;
             player_switch(player);
+            }
+            sound.play();
+            sound.volume = 0.1;
+
          }
 
         }
       } else {
+
         //sound.play();
         //sound.volume = 0.1;
-        tiles[checking].type = paint;
+        ctiles[checking].type = paint;
     }
 
 
     }
+
 
 function linecheck(num) {
     var indexes = new Array();
@@ -1106,98 +1154,177 @@ function linecheck(num) {
 
 }
 
+function is_volatile(tile) {
+        if (tile != 101) {
+
+            if (vol_array[tile][0] == null) {
+                    vol_array[tile][0] = 5;
+                    vol_array[tile][1] = 0;
+                    vol_array[tile][2] = 7;
+               // console.log("added",vol_array[tile]);
+            }
+
+             } else {
+                for(var i = 0;i < 100;i++) {
+                     if (vol_array[i][0] != null) {
+                             if(vol_array[i][0] == 0) {
+
+
+                                 if (vol_array[i][1] == 0) {
+                                    tiles[i].type = 98;
+                                        tiles[i].vtile = 1;
+                                         vol_array[i][1] = 1;
+
+                                        } else {
+                                            //console.log("cooldown in",vol_array[i][2] );
+                                            vol_array[i][2] = vol_array[i][2] - 1;
+                                        }
+
+                                     if (vol_array[i][2]  == 0) {
+                                         vol_array[i][0] = null;
+                                         vol_array[i][1] = null;
+                                         vol_array[i][2] = null;
+                                         tiles[i].vtile = 0;
+                                         if(tiles[i].player == 100) tiles[i].etype = 0;
+                                     }
+
+                               } else {
+
+                                    vol_array[i][0] = vol_array[i][0] - 1;
+
+                                 //console.log("tick", vol_array[i][0]);
+                                 }
+                         }
+                }
+}
+}
+
 function player_setup() {
 
-    wipeAll();
+    //wipeAll();
+    notification();
+
+    gamemode = 0;
+
+    theWindow.wemblem = 99;
+    theWindow.wbacking = 1;
+    notify_me.tmessege = "Please Wait"
+
+    theWindow.emblem5 = 0;
+    theWindow.emblem2 = 0;
+    theWindow.emblem3 = 0;
+    theWindow.emblem4 = 0;
+
+    theWindow.backing5 = 0;
+    theWindow.backing2 = 0;
+    theWindow.backing3 = 0;
+    theWindow.backing4 = 0;
+
+    theWindow.player5 = "";
+    theWindow.player2 = "";
+    theWindow.player3 = "";
+    theWindow.player4 = "";
+
+
 
     if (nwtoggle == 0) {
         var p1 = "Player 1";
          pbacking[0] = 17;
          pos0backing = 17;
         pos0emblem = 0;
+        pemblem[0] = 0;
 
-
-    pname[0] = "No Player";
-    pname[1] = "No Player";
-    pname[2] ="No Player";
-    pname[3] ="No Player";
+    //pname[0] = "No Player";
+   // pname[1] = "No Player";
+    //pname[2] ="No Player";
+    //pname[3] ="No Player";
 
     pbacking[1] = 22;
     pbacking[2] = 18;
     pbacking[3] = 19;
 
+        pemblem[1] = 0;
+        pemblem[2] = 0;
+        pemblem[3] = 0;
 
+        switch(numofplayers) {
+        case 2:pname[0] = "Player 1";pname[1] ="Player 2";break;
+        case 3:pname[0] = "Player 1";pname[1] ="Player 2";pname[2] ="Player 3";break;
+        case 4:pname[0] = "Player 1";pname[1] ="Player 2";pname[2] ="Player 3";pname[3] ="Player 4";break;
+        }
 
-
+        pos0name = pname[0];
+    startNewGame();
 
    } else {
-       /* var db = Sql.LocalStorage.openDatabaseSync("UserInfo", "1.0", "Local UserInfo", 1);
-        db.transaction(function(rtx) {
-            rtx.executeSql('CREATE TABLE IF NOT EXISTS Users(id TEXT, name TEXT, email TEXT)');
-
-            var pull = rtx.executeSql('SELECT name FROM Users');
-            if(pull.rows.length > 0) {
-            p1 = pull.rows.item(0).name;
-            }
-        }
-            ) */
 
 
-          check_network();
+
+
         if(gameid == 0) {
+            check_network();
           network_match();
         } else {
             network_update();
             //console.log("waiting for",waitingfor,"more players");
+            if(pname[numofplayers-1].length <= 1) {
             get_players();
             var count = 0;
             while(playerids[count] !="na") {
             set_player(playerids[count],count);
+                //console.log("Player ", count, " should be",pname[count]);
+
+
                 count = count + 1;
             }
+            }
 
+            switch (numofplayers) {
+            case 2: player2 = pname[0];backing2 = pbacking[0];emblem2 = pemblem[0];player3 = pname[1];backing3 = pbacking[1];emblem3 = pemblem[1];break;
+
+
+            case 3: player2 = pname[0];backing2 = pbacking[0];emblem2 = pemblem[0];player3 = pname[1];backing3 = pbacking[1];emblem3 = pemblem[1];
+                    player4 = pname[2];backing4 = pbacking[2];emblem4 = pemblem[2];break;
+
+            case 4: player2 = pname[0];backing2 = pbacking[0];emblem2 = pemblem[0];player3 = pname[1];backing3 = pbacking[1];
+                    emblem3 = pemblem[1];player4 = pname[2];backing4 = pbacking[2];emblem4 = pemblem[2];
+                    player5 = pname[3];backing5 = pbacking[3];emblem5 = pemblem[3];break;
         }
 
 
-        //switch(numofplayers) {
-       // case 2:pname[0] = p1;pname[1] ="Player 2";break;
-       // case 3:pname[0] = p1;pname[1] ="Player 2";pname[2] ="Player 3";break;
-       // case 4:pname[0] = p1;pname[1] ="Player 2";pname[2] ="Player 3";pname[3] ="Player 4";break;
-       // }
+
+        }
+
         //if(pname[0] != null ) {
        // pos0name = pname[0];
         //} else {pos0name = "loading";}
 
-        //console.log(gameid);
+        console.log(gameid);
         if(gactive == 1) {
-                if(pname[0] != null) {
+            //console.log("Game in active state");
+            //console.log(pname[0])
+                if(pname[numofplayers-1].length > 1) {
                     pos0name = pname[0];
-                //console.log("Game Started");
-                    startNewGame();
+                    pos0backing=pbacking[0];
+                    pos0emblem=pemblem[0];
+                //console.log(numofplayers);
+                    if(countdown == 0) {
+                    startNewGame(); } else { countdown = countdown -1;
+                                             notify_me.tmessege= "Please Wait. ("+countdown+")"; }
                 }
             }
            // }
-        }
 
 
-
- if (nwtoggle == 0) {
-
-     switch(numofplayers) {
-     case 2:pname[0] = p1;pname[1] ="Player 2";break;
-     case 3:pname[0] = p1;pname[1] ="Player 2";pname[2] ="Player 3";break;
-     case 4:pname[0] = p1;pname[1] ="Player 2";pname[2] ="Player 3";pname[3] ="Player 4";break;
-     }
-    pos0name = pname[0];
-
-    startNewGame();
  }
 
 
 }
 
 function player_switch(player_num) {
-
+    if (sameUser != player_num) {
+    //console.log("switched to player ",pname[player_num]);
+        sameUser = player_num;
     if(numofplayers == 4) {
 
     switch(player_num) {
@@ -1304,13 +1431,24 @@ function player_switch(player_num) {
     }
 
     score = 0;
+
+    } else {
+        console.log("waiting for ",pname[player_num]);
+    }
+
     //player_notification.state = "show";
 
 }
 
 function createCanvas() {
+
+    gamemode = 5;
     wipeAll();
+    network_wait.stop();
     element_type = 99;
+    in_game.stop();
+    gamestarted = 1;
+
     //Calculate board size
          maxColumn = 22;
        maxRow = 20;
@@ -1323,8 +1461,8 @@ function createCanvas() {
        for (var column = 0; column < maxColumn; column++) {
            for (var row = 0; row < maxRow; row++) {
 
-               createTile(column, row, tilenum);
-                tilenum= tilenum +1;
+               createTile(column, row, ctilenum);
+                ctilenum= ctilenum +1;
            }
        }
 
@@ -1364,7 +1502,7 @@ function createTile(column, row, num) {
         dynamicObject.row = row;
         dynamicObject.column = column;
         dynamicObject.type = 98;
-       tiles[num] = dynamicObject;
+       ctiles[num] = dynamicObject;
 
 
     } else {
@@ -1382,53 +1520,10 @@ element_type = type;
 
 }
 
-function is_volatile(tile) {
-        if (tile != 101) {
 
-            if (vol_array[tile][0] == null) {
-                    vol_array[tile][0] = 5;
-                    vol_array[tile][1] = 0;
-                    vol_array[tile][2] = 4;
-               // console.log("added",vol_array[tile]);
-            }
-
-             } else {
-                for(var i = 0;i < 100;i++) {
-                     if (vol_array[i][0] != null) {
-                             if(vol_array[i][0] == 0) {
-
-
-                                 if (vol_array[i][1] == 0) {
-                                    tiles[i].type = 98;
-                                        tiles[i].vtile = 1;
-                                         vol_array[i][1] = 1;
-
-                                        } else {
-                                            //console.log("cooldown in",vol_array[i][2] );
-                                            vol_array[i][2] = vol_array[i][2] - 1;
-                                        }
-
-                                     if (vol_array[i][2]  == 0) {
-                                         vol_array[i][0] = null;
-                                         vol_array[i][1] = null;
-                                         vol_array[i][2] = null;
-                                         tiles[i].vtile = 0;
-                                        tiles[i].etype = 0;
-                                     }
-
-                               } else {
-
-                                    vol_array[i][0] = vol_array[i][0] - 1;
-
-                                 //console.log("tick", vol_array[i][0]);
-                                 }
-                         }
-                }
-}
-}
 
 function endgame() {
-
+    in_game.stop();
     var highscore = 0;
     if(highscore < pscore[0]) {
         highscore = pscore[0];
@@ -1445,37 +1540,87 @@ function endgame() {
 
     if(highscore == pscore[0]) {
         var s = pname[0];
-        s = s.concat(" WINS!!");
+        s = s.concat(" Wins!");
+        wemblem = pemblem[0];
+        wbacking = pbacking[0];
+
         notify_me.tmessege = s
         notify_me.state = "winner";
+
+        if( nwtoggle == 1 | userid == pid[0]) {player_update(0,"w"); //} else {
+        player_update(2,"l");
+        player_update(1,"l");
+        player_update(3,"l");
+    }
        // console.log(s);
+
     }
     if(highscore == pscore[1]) {
         var s = pname[1];
-        s = s.concat(" WINS!!");
+        s = s.concat(" Wins!");
+        wemblem = pemblem[1];
+        wbacking = pbacking[1];
+
         notify_me.tmessege = s
         notify_me.state = "winner";
+
+
+        if( nwtoggle == 1 | userid == pid[0]) {player_update(1,"w"); //} else {
+        player_update(2,"l");
+        player_update(3,"l");
+        player_update(0,"l");
+    }
        // console.log("Player 2 WINS!");
     }
     if(highscore == pscore[2]) {
         var s = pname[2];
-        s = s.concat(" WINS!!");
+        s = s.concat(" Wins!");
+        wemblem = pemblem[2];
+        wbacking = pbacking[2];
+
         notify_me.tmessege = s
         notify_me.state = "winner";
+
+        if( nwtoggle == 1 | userid == pid[0]) {player_update(2,"w"); //} else {
+        player_update(3,"l");
+        player_update(1,"l");
+        player_update(0,"l");
+    }
+
        // console.log("Player 3 WINS!");
     }
     if(highscore == pscore[3]) {
         var s = pname[3];
-        s = s.concat(" WINS!!");
+        s = s.concat(" Wins!");
+        wemblem = pemblem[3];
+        wbacking = pbacking[3];
+
         notify_me.tmessege = s
         notify_me.state = "winner";
+
+       if( nwtoggle == 1 | userid == pid[0]) { player_update(3,"w"); //} else {
+           player_update(2,"l");
+           player_update(1,"l");
+           player_update(0,"l");
+       }
+
        // console.log("Player 4 WINS!");
     }
-   // console.log(gameover)
+    //console.log(gameover)
+   wipeAll();
 
 }
 
 function wipeAll() {
+    console.log("cleaning");
+
+    //if(gamestarted == 1) notify_me.state = "inactive";
+
+
+
+    if (gamemode != 5) {
+
+    pnote.state = "inactive";
 
     for (var i = 0; i < 22*20; i++) {
         if (tiles[i] != null) {
@@ -1487,34 +1632,72 @@ function wipeAll() {
             vol_array[i] = null;
     }
     }
-//if (nwtoggle == 0) {
-     //pname[0] = "";
+    //in_game.stop();
+
      pscore[0] = 0;
-
-    // pbacking[0] = 1;
-     //pemblem[0] = 0;
-
      pcombo[0] = 0;
+     pwins[0] = 0;
+    plosses[0] = 0;
+    pdraws[0] =0;
 
-     //pname[1] = "";
      pscore[1] = 0;
-     //pbacking[1] = 0;
-     //pemblem[1] = 0;
      pcombo[1] = 0;
+    pwins[1] = 0;
+   plosses[1] = 0;
+   pdraws[1] =0;
 
-    // pname[2] = "";
+
      pscore[2] = 0;
-    // pbacking[2] = 0;
-    // pemblem[2] = 0;
      pcombo[2] = 0;
+    pwins[2] = 0;
+   plosses[2] = 0;
+   pdraws[2] =0;
 
-    // pname[3] = "";
+
      pscore[3] = 0;
-    // pbacking[3] = 0;
-    // pemblem[3] = 0;
      pcombo[3] = 0;
+    pwins[3] = 0;
+   plosses[3] = 0;
+   pdraws[3] =0;
+
+
+
+   //if (nwtoggle == 0) {
+     pid[0] = "";
+     pname[0] = "";
+     pbacking[0] = 1;
+     pemblem[0] = 0;
+     playerids[0] = "na";
+
+
+     pid[1] = "";
+     pname[1] = "";
+     pbacking[1] = 1;
+     pemblem[1] = 0;
+     playerids[1] = "na";
+
+     pid[2] = "";
+     pname[2] = "";
+     pbacking[2] = 1;
+     pemblem[2] = 0;
+     playerids[2] = "na";
+
+     pid[3] = "";
+     pname[3] = "";
+     pbacking[3] = 1;
+     pemblem[3] = 0;
+     playerids[3] = "na";
+
 //}
 
+    userid = "";
+    gactive = 0;
+    gindex = 0;
+    yourturn = 0;
+   sameUser = 0;
+    gamerequested = 0;
+    gamestarted = 0;
+    waitingfor = 0;
 
      player = 0;
      score = 0;
@@ -1522,32 +1705,59 @@ function wipeAll() {
      tilenum = 0;
      xoffset = 0;
      yoffset = 0;
-     mainwindow.countdown = 4*60;
-     mainwindow.minutes = 4;
+    gameid = 0;
 
-    //mainwindow.numofplayers =0;
-    mainwindow.pos0score= 0;
-    mainwindow.pos0emblem= 0;
-    mainwindow.pos0combo=0;
+     theWindow.countdown = 5*60;
+     theWindow.minutes = 5;
 
-    //mainwindow.wins= 0;
-   // mainwindow.loss= 0;
-    //mainwindow.draw= 0;
-   // mainwindow.moves= 0;
+    //theWindow.numofplayers =0;
+    theWindow.pos0score= 0;
+    theWindow.pos0emblem= 1;
+    theWindow.pos0backing=1;
+    theWindow.pos0combo=0;
+    theWindow.pos0name ="";
+
+    //theWindow.wins= 0;
+   // theWindow.loss= 0;
+    //theWindow.draw= 0;
+   // theWindow.moves= 0;
 
 
-    mainwindow.spin_type= 0;
-    mainwindow.element_type= 0;
-    mainwindow.gamemode= 0;
-    mainwindow.combo_true= 0;
+    theWindow.spin_type= 1;
+    theWindow.element_type= 0;
+    theWindow.gamemode= 0;
+    theWindow.combo_true= 0;
+    theWindow.element_type = 0;
+
 
     for (var i=0;i<100;i++) {
 
         vol_array[i] = new Array(3);
     }
 
-    //mainwindow.state = "mainmenu";
+    //theWindow.state = "mainmenu";
+
+
+    } else {
+        for (var i = 0; i < 22*20; i++) {
+            if (ctiles[i] != null) {
+                //tiles[i] = null;
+                ctiles[i].destroy();
+                //console.log("Tile",i," Destroyed");
+        }
+    }
+        ctilenum = 0;
+       //xoffset = 0;
+       //yoffset = 0;
+        paint = 99;
+
+    }
+
+    console.log("clean");
 }
+
+
+//Network functions //
 
 function check_network() {
 
@@ -1565,11 +1775,16 @@ function check_network() {
             userid = pull.rows.item(0).id;
             Username = pull.rows.item(0).name;
             Useremail = pull.rows.item(0).email;
+            lname = Username;
+            } else {
+                cafesync(1);
             }
 
         });
         userName = Username;
         userEmail = Useremail;
+        //pos0backing =
+        //pos0emblem =
     // Got it //
 
     //Queries Online DB //
@@ -1581,13 +1796,15 @@ function check_network() {
             if (http.readyState == 4) {
                 query = http.responseText;
                 query = query.split("%;%");
-                pwins[0] = query[4];
-                plosses[0] = query[5];
-                pdraws[0] = query[6];
-                pemblem[0] = query[3];
-                pbacking[0] = query[2];
-                pos0backing = pbacking[0];
-                pos0emblem = pemblem[0];
+                lwins = query[4];
+                llosses = query[5];
+                ldraws = query[6];
+                lemblem = query[3];
+                lbacking = query[2];
+                if(lbacking != null) {
+                tile = lbacking;
+                emblem = lemblem;
+                }
             }
         }
         http.open('GET', url, true);
@@ -1599,7 +1816,7 @@ function check_network() {
 }
 
 function network_match() {
-
+    if(gamerequested == 0) {
     // Requesting a game //
     var http = new XMLHttpRequest();
         var url = "http://www.vagueentertainment.com/cafesync/vola-tile/game.php/?id=request&players=" + numofplayers + "&userid="+ userid + "&game=1";
@@ -1612,20 +1829,26 @@ function network_match() {
                 gameid = query[0];
                 gactive = query[1];
                 //console.log(gameid);
-
-
+                notify_me.state= "winner";
+                notify_me.tmessege = "Please Wait";
+                wemblem = 99;
+                wbacking = 1;
 
             }
         }
         http.open('GET', url, true);
         http.send(null);
 
+        gamerequested = 1;
+}
 
 
 }
 
 function network_update() {
 
+
+   //if(userid != pid[yourturn]) {
     // checking game //
     var http = new XMLHttpRequest();
         var url = "http://www.vagueentertainment.com/cafesync/vola-tile/game.php/?id=" +gameid+"&check=check";
@@ -1637,15 +1860,44 @@ function network_update() {
                 query = http.responseText;
                 query = query.split("%;%");
                 //gameid = query[0];
-                waitingfor = query[1];
+
+                //console.log(query[1]);
                 if(query[0] !="NR") {
                 gactive = 1;
-                console.log(query);
-                tiles[query[2]].type = pbacking[query[1]];tiles[query[2]].player = query[1];tiles[query[2]].etype = pemblem[query[1]];
-                    yourturn = query[1];
+                    waitingfor= 0;
+                //console.log(query);
+                    if (query[2] != 101) {
+                        console.log(query[2]);
+                        if(tiles[query[2]].type != null) {
+                        if(tiles[query[2]].type != 99) {
+                            is_volatile(101);
+                            if(tiles[query[2]].type == 98) {
+                    /*tiles[query[2]].type = pbacking[query[1] - 1 ];
+                    tiles[query[2]].player = query[1] -1 ;
+                    tiles[query[2]].etype = pemblem[query[1] - 1 ]; */
+                    tiles[query[2]].type = pbacking[player];
+                    tiles[query[2]].player = player;
+                    tiles[query[2]].etype = pemblem[player];
 
+                    //sound.play();
+                    //sound.volume = 0.1;
+                    linecheck(query[2]);
+                    yourturn = query[1] -1;
+                    player = yourturn;
+                    player_switch(player);
+
+                        }
+                    }
+                  }
+                }
+                    //player_switch(query[1]);
                 } else {
-                console.log(query);
+                    waitingfor = query[1];
+                    notify_me.state= "winner";
+                    notify_me.tmessege = "Please Wait";
+                    wemblem = 99;
+                    wbacking = 1;
+              // console.log(query);
 
 
             }
@@ -1654,7 +1906,7 @@ function network_update() {
         http.open('GET', url, true);
         http.send(null);
 
-
+//}
 
 }
 
@@ -1715,16 +1967,48 @@ function player_move(index) {
 
     // checking game //
     var http = new XMLHttpRequest();
-        var url = "http://www.vagueentertainment.com/cafesync/vola-tile/game.php/?id=" +gameid+"&gindex="+index;
 
-        //console.log(url)
+        var url = "http://www.vagueentertainment.com/cafesync/vola-tile/game.php/?id=" +gameid+"&gindex="+index+"&check="+yourturn;
+
+        console.log(url)
     var query
         http.onreadystatechange = function() {
             if (http.readyState == 4) {
                 query = http.responseText;
+
                    }
         }
         http.open('GET', url, true);
         http.send(null);
+
+
+}
+
+function player_update(id,wld) {
+    var http = new XMLHttpRequest();
+    var wins = Number(pwins[id]);
+    var losses = Number(plosses[id]);
+    var draws = Number(pdraws[id]);
+
+    if(nwtoggle == 1) {
+    switch (wld) {
+    case "w": wins = wins + 1; var url = "http://www.vagueentertainment.com/cafesync/vola-tile/add_user.php/?userid=" +pid[id]+"&wins="+ wins + "&activated=1&emblem=" + pemblem[id] + "&tile="
+              + pbacking[0] + "&losses=" + losses + "&draws=" + draws;break;
+    case "l": losses = losses + 1; var url = "http://www.vagueentertainment.com/cafesync/vola-tile/add_user.php/?userid=" +pid[id]+"&wins="+ wins + "&activated=1&emblem=" + pemblem[id] + "&tile="
+                                   + pbacking[0] + "&losses=" + losses + "&draws=" + draws;break;
+    case "d": draws = draws + 1; var url = "http://www.vagueentertainment.com/cafesync/vola-tile/add_user.php/?userid=" +pid[id]+"&wins="+ wins + "&activated=1&emblem=" + pemblem[id] + "&tile="
+                                 + pbacking[0] + "&losses=" + losses + "&draws=" + draws;break;
+        }
+    console.log(pid[id],"updated");
+    var query
+        http.onreadystatechange = function() {
+            if (http.readyState == 4) {
+                query = http.responseText;
+
+                   }
+        }
+        http.open('GET', url, true);
+        http.send(null);
+}
 
 }

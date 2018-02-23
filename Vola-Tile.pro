@@ -1,49 +1,47 @@
-# Add more folders to ship with the application, here
-folder_01.source = qml/Vola-Tile
-folder_01.target = qml
-DEPLOYMENTFOLDERS = folder_01
+TEMPLATE = app
 
-# Additional import path used to resolve QML modules in Creator's code model
-QML_IMPORT_PATH =
-QT += multimedia sql
+QT += qml quick svg sql androidextras
+CONFIG += c++11
 
+# The following define makes your compiler emit warnings if you use
+# any feature of Qt which as been marked deprecated (the exact warnings
+# depend on your compiler). Please consult the documentation of the
+# deprecated API in order to know how to port your code away from it.
+DEFINES += QT_DEPRECATED_WARNINGS
 
-# The .cpp file which was generated for your project. Feel free to hack it.
+# You can also make your code fail to compile if you use deprecated APIs.
+# In order to do so, uncomment the following line.
+# You can also select to disable deprecated APIs only up to a certain version of Qt.
+#DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
+
 SOURCES += main.cpp
 
-# Installation path
-# target.path =
+RESOURCES += qml.qrc
 
-# Please do not modify the following two lines. Required for deployment.
-include(qtquick2applicationviewer/qtquick2applicationviewer.pri)
-qtcAddDeployment()
+# Additional import path used to resolve QML modules in Qt Creator's code model
+QML_IMPORT_PATH =
+
+# Additional import path used to resolve QML modules just for Qt Quick Designer
+QML_DESIGNER_IMPORT_PATH =
+
+# Default rules for deployment.
+qnx: target.path = /tmp/$${TARGET}/bin
+else: unix:!android: target.path = /opt/$${TARGET}/bin
+!isEmpty(target.path): INSTALLS += target
+
+DISTFILES += \
+    android/AndroidManifest.xml \
+    android/gradle/wrapper/gradle-wrapper.jar \
+    android/gradlew \
+    android/res/values/libs.xml \
+    android/build.gradle \
+    android/gradle/wrapper/gradle-wrapper.properties \
+    android/gradlew.bat
 
 ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android
 
-OTHER_FILES +=
-
-#ANDROID_EXTRA_LIBS = ../../../../../../opt/Qt5.2.1/5.2.1/android_armv7/lib/libQt5Multimedia.so ../../../../../../opt/Qt5.2.1/5.2.1/android_armv7/lib/libQt5Quick.so ../../../../../../opt/Qt5.2.1/5.2.1/android_armv7/lib/libQt5Qml.so ../../../../../../opt/Qt5.2.1/5.2.1/android_armv7/lib/libQt5OpenGL.so ../../../../../../opt/Qt5.2.1/5.2.1/android_armv7/lib/libQt5Gui.so ../../../../../../opt/Qt5.2.1/5.2.1/android_armv7/lib/libQt5Network.so ../../../../../../opt/Qt5.2.1/5.2.1/android_armv7/lib/libQt5Sql.so ../../../../../../opt/Qt5.2.1/5.2.1/android_armv7/lib/libQt5Xml.so ../../../../../../opt/Qt5.2.1/5.2.1/android_armv7/lib/libQt5Core.so ../../../../../../opt/Qt5.2.1/5.2.1/android_armv7/lib/libQt5Widgets.so ../../../../../../opt/Qt5.2.1/5.2.1/android_armv7/plugins/mediaservice/libqtmedia_android.so ../../../../../../opt/Qt5.2.1/5.2.1/android_armv7/plugins/sqldrivers/libqsqlite.so ../../../../../../opt/Qt5.2.1/5.2.1/android_armv7/lib/libQt5AndroidExtras.so
-
 contains(ANDROID_TARGET_ARCH,armeabi-v7a) {
     ANDROID_EXTRA_LIBS = \
-        $$PWD/../../../../Qt/5.3/android_armv7/lib/libQt5AndroidExtras.so \
-        $$PWD/../../../../Qt/5.3/android_armv7/lib/libQt5Core.so \
-        $$PWD/../../../../Qt/5.3/android_armv7/lib/libQt5Gui.so \
-        $$PWD/../../../../Qt/5.3/android_armv7/lib/libQt5Multimedia.so \
-        $$PWD/../../../../Qt/5.3/android_armv7/lib/libQt5MultimediaQuick_p.so \
-        $$PWD/../../../../Qt/5.3/android_armv7/lib/libQt5MultimediaWidgets.so \
-        $$PWD/../../../../Qt/5.3/android_armv7/lib/libQt5Network.so \
-        $$PWD/../../../../Qt/5.3/android_armv7/lib/libQt5OpenGL.so \
-        $$PWD/../../../../Qt/5.3/android_armv7/lib/libQt5Qml.so \
-        $$PWD/../../../../Qt/5.3/android_armv7/lib/libQt5Quick.so \
-        $$PWD/../../../../Qt/5.3/android_armv7/lib/libQt5QuickParticles.so \
-        $$PWD/../../../../Qt/5.3/android_armv7/lib/libQt5Sql.so \
-        $$PWD/../../../../Qt/5.3/android_armv7/lib/libQt5Xml.so \
-        $$PWD/../../../../Qt/5.3/android_armv7/lib/libQt5XmlPatterns.so
+        $$PWD/../../Android/openssl/libcrypto.so \
+        $$PWD/../../Android/openssl/libssl.so
 }
-
-DISTFILES += \
-    Vola-Tile.json \
-    Vola-Tile.desktop \
-    Vola-Tile.apparmor \
-    manifest.json
